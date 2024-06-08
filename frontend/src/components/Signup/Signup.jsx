@@ -7,7 +7,7 @@ import axios from "axios";
 import { server } from "../../server";
 import { toast } from "react-toastify";
 
-const Signup = () => {
+const Singup = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -29,25 +29,18 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const response = await axios.post(`${server}/user/create-user`, { name, email, password, avatar });
-
-      if (response && response.data && response.data.message) {
-        toast.success(response.data.message);
+    axios
+      .post(`${server}/user/create-user`, { name, email, password, avatar })
+      .then((res) => {
+        toast.success(res.data.message);
         setName("");
         setEmail("");
         setPassword("");
-        setAvatar(null); // Clear the avatar state
-      } else {
-        toast.error("Unexpected response from server");
-      }
-    } catch (error) {
-      if (error.response && error.response.data && error.response.data.message) {
+        setAvatar();
+      })
+      .catch((error) => {
         toast.error(error.response.data.message);
-      } else {
-        toast.error("Something went wrong");
-      }
-    }
+      });
   };
 
   return (
@@ -188,4 +181,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Singup;

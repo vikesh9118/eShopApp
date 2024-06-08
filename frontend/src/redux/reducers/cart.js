@@ -6,23 +6,27 @@ const initialState = {
     : [],
 };
 
-export const cartReducer = createReducer(initialState, (builder) => {
-  builder
-    // Add to Cart
-    .addCase('addToCart', (state, action) => {
-      const item = action.payload;
-      const isItemExist = state.cart.find((i) => i._id === item._id);
-      if (isItemExist) {
-        state.cart = state.cart.map((i) => (i._id === isItemExist._id ? item : i));
-      } else {
-        state.cart.push(item);
-      }
-    })
+export const cartReducer = createReducer(initialState, {
+  addToCart: (state, action) => {
+    const item = action.payload;
+    const isItemExist = state.cart.find((i) => i._id === item._id);
+    if (isItemExist) {
+      return {
+        ...state,
+        cart: state.cart.map((i) => (i._id === isItemExist._id ? item : i)),
+      };
+    } else {
+      return {
+        ...state,
+        cart: [...state.cart, item],
+      };
+    }
+  },
 
-    // Remove from Cart
-    .addCase('removeFromCart', (state, action) => {
-      state.cart = state.cart.filter((i) => i._id !== action.payload);
-    });
+  removeFromCart: (state, action) => {
+    return {
+      ...state,
+      cart: state.cart.filter((i) => i._id !== action.payload),
+    };
+  },
 });
-
-export default cartReducer;

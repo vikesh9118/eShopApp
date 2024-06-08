@@ -41,8 +41,8 @@ const ShopCreate = () => {
         setPhoneNumber();
       })
       .catch((error) => {
-        toast.error(error?.response?.data?.message || "An error occurred");
-      });      
+        toast.error(error.response.data.message);
+      });
   };
 
   const handleFileInputChange = (e) => {

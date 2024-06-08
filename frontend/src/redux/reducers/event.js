@@ -4,66 +4,61 @@ const initialState = {
   isLoading: true,
 };
 
-export const eventReducer = createReducer(initialState, (builder) => {
-  builder
-    // Create Event
-    .addCase('eventCreateRequest', (state) => {
-      state.isLoading = true;
-    })
-    .addCase('eventCreateSuccess', (state, action) => {
-      state.isLoading = false;
-      state.event = action.payload;
-      state.success = true;
-    })
-    .addCase('eventCreateFail', (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-      state.success = false;
-    })
+export const eventReducer = createReducer(initialState, {
+  eventCreateRequest: (state) => {
+    state.isLoading = true;
+  },
+  eventCreateSuccess: (state, action) => {
+    state.isLoading = false;
+    state.event = action.payload;
+    state.success = true;
+  },
+  eventCreateFail: (state, action) => {
+    state.isLoading = false;
+    state.error = action.payload;
+    state.success = false;
+  },
 
-    // Get All Events of Shop
-    .addCase('getAlleventsShopRequest', (state) => {
-      state.isLoading = true;
-    })
-    .addCase('getAlleventsShopSuccess', (state, action) => {
-      state.isLoading = false;
-      state.events = action.payload;
-    })
-    .addCase('getAlleventsShopFailed', (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    })
+  // get all events of shop
+  getAlleventsShopRequest: (state) => {
+    state.isLoading = true;
+  },
+  getAlleventsShopSuccess: (state, action) => {
+    state.isLoading = false;
+    state.events = action.payload;
+  },
+  getAlleventsShopFailed: (state, action) => {
+    state.isLoading = false;
+    state.error = action.payload;
+  },
 
-    // Delete Event of a Shop
-    .addCase('deleteeventRequest', (state) => {
-      state.isLoading = true;
-    })
-    .addCase('deleteeventSuccess', (state, action) => {
-      state.isLoading = false;
-      state.message = action.payload;
-    })
-    .addCase('deleteeventFailed', (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    })
+  // delete event of a shop
+  deleteeventRequest: (state) => {
+    state.isLoading = true;
+  },
+  deleteeventSuccess: (state, action) => {
+    state.isLoading = false;
+    state.message = action.payload;
+  },
+  deleteeventFailed: (state, action) => {
+    state.isLoading = false;
+    state.error = action.payload;
+  },
 
-    // Get All Events
-    .addCase('getAlleventsRequest', (state) => {
-      state.isLoading = true;
-    })
-    .addCase('getAlleventsSuccess', (state, action) => {
-      state.isLoading = false;
-      state.allEvents = action.payload;
-    })
-    .addCase('getAlleventsFailed', (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-    })
+  // get all events 
+  getAlleventsRequest: (state) => {
+    state.isLoading = true;
+  },
+  getAlleventsSuccess: (state, action) => {
+    state.isLoading = false;
+    state.allEvents = action.payload;
+  },
+  getAlleventsFailed: (state, action) => {
+    state.isLoading = false;
+    state.error = action.payload;
+  },
 
-    // Clear Errors
-    .addCase('clearErrors', (state) => {
-      state.error = null;
-    });
+  clearErrors: (state) => {
+    state.error = null;
+  },
 });
-
-export default eventReducer;
