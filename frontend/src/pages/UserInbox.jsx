@@ -2,18 +2,18 @@ import React, { useEffect, useRef, useState } from "react";
 import Header from "../components/Layout/Header";
 import { useSelector } from "react-redux";
 import socketIO from "socket.io-client";
-import { format } from "timeago.js";
 import { server } from "../server";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineArrowRight, AiOutlineSend } from "react-icons/ai";
 import { TfiGallery } from "react-icons/tfi";
 import styles from "../styles/styles";
-const ENDPOINT = "https://socket-ecommerce-tu68.onrender.com/";
-const socketId = socketIO(ENDPOINT, { transports: ["websocket"] });
+
+const ENDPOINT = "http://localhost:4000"; // Corrected endpoint
+const socket = socketIO(ENDPOINT, { transports: ["websocket"] }); // Renamed to `socket`
 
 const UserInbox = () => {
-  const { user,loading } = useSelector((state) => state.user);
+  const { user, loading } = useSelector((state) => state.user);
   const [conversations, setConversations] = useState([]);
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const [currentChat, setCurrentChat] = useState();
@@ -21,13 +21,12 @@ const UserInbox = () => {
   const [newMessage, setNewMessage] = useState("");
   const [userData, setUserData] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [images, setImages] = useState();
   const [activeStatus, setActiveStatus] = useState(false);
   const [open, setOpen] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    socketId.on("getMessage", (data) => {
+    socket.on("getMessage", (data) => {
       setArrivalMessage({
         sender: data.senderId,
         text: data.text,
@@ -45,14 +44,14 @@ const UserInbox = () => {
   useEffect(() => {
     const getConversation = async () => {
       try {
-        const resonse = await axios.get(
+        const response = await axios.get(
           `${server}/conversation/get-all-conversation-user/${user?._id}`,
           {
             withCredentials: true,
           }
         );
 
-        setConversations(resonse.data.conversations);
+        setConversations(response.data.conversations);
       } catch (error) {
         // console.log(error);
       }
@@ -63,8 +62,8 @@ const UserInbox = () => {
   useEffect(() => {
     if (user) {
       const sellerId = user?._id;
-      socketId.emit("addUser", sellerId);
-      socketId.on("getUsers", (data) => {
+      socket.emit("addUser", sellerId);
+      socket.on("getUsers", (data) => {
         setOnlineUsers(data);
       });
     }
@@ -105,7 +104,7 @@ const UserInbox = () => {
       (member) => member !== user?._id
     );
 
-    socketId.emit("sendMessage", {
+    socket.emit("sendMessage", {
       senderId: user?._id,
       receiverId,
       text: newMessage,
@@ -129,7 +128,7 @@ const UserInbox = () => {
   };
 
   const updateLastMessage = async () => {
-    socketId.emit("updateLastMessage", {
+    socket.emit("updateLastMessage", {
       lastMessage: newMessage,
       lastMessageId: user._id,
     });
@@ -152,7 +151,6 @@ const UserInbox = () => {
 
     reader.onload = () => {
       if (reader.readyState === 2) {
-        setImages(reader.result);
         imageSendingHandler(reader.result);
       }
     };
@@ -161,12 +159,11 @@ const UserInbox = () => {
   };
 
   const imageSendingHandler = async (e) => {
-
     const receiverId = currentChat.members.find(
       (member) => member !== user._id
     );
 
-    socketId.emit("sendMessage", {
+    socket.emit("sendMessage", {
       senderId: user._id,
       receiverId,
       images: e,
@@ -174,17 +171,13 @@ const UserInbox = () => {
 
     try {
       await axios
-        .post(
-          `${server}/message/create-new-message`,
-          {
-            images: e,
-            sender: user._id,
-            text: newMessage,
-            conversationId: currentChat._id,
-          }
-        )
+        .post(`${server}/message/create-new-message`, {
+          images: e,
+          sender: user._id,
+          text: newMessage,
+          conversationId: currentChat._id,
+        })
         .then((res) => {
-          setImages();
           setMessages([...messages, res.data.message]);
           updateLastMessageForImage();
         });
@@ -204,7 +197,7 @@ const UserInbox = () => {
   };
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ beahaviour: "smooth" });
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   return (
@@ -263,7 +256,7 @@ const MessageList = ({
   userData,
   online,
   setActiveStatus,
-  loading
+  loading,
 }) => {
   const [active, setActive] = useState(0);
   const [user, setUser] = useState([]);
@@ -285,13 +278,13 @@ const MessageList = ({
       }
     };
     getUser();
-  }, [me, data]);
+  }, [me, data, online, setActiveStatus]);
 
   return (
     <div
       className={`w-full flex p-3 px-3 ${
         active === index ? "bg-[#00000010]" : "bg-transparent"
-      }  cursor-pointer`}
+      } cursor-pointer`}
       onClick={(e) =>
         setActive(index) ||
         handleClick(data._id) ||
@@ -303,7 +296,7 @@ const MessageList = ({
       <div className="relative">
         <img
           src={`${user?.avatar?.url}`}
-          alt=""
+          alt={user?.name}
           className="w-[50px] h-[50px] rounded-full"
         />
         {online ? (
@@ -344,7 +337,7 @@ const SellerInbox = ({
         <div className="flex">
           <img
             src={`${userData?.avatar?.url}`}
-            alt=""
+            alt={userData?.name}
             className="w-[60px] h-[60px] rounded-full"
           />
           <div className="pl-3">
@@ -368,18 +361,20 @@ const SellerInbox = ({
                 item.sender === sellerId ? "justify-end" : "justify-start"
               }`}
               ref={scrollRef}
+              key={index}
             >
               {item.sender !== sellerId && (
                 <img
                   src={`${userData?.avatar?.url}`}
                   className="w-[40px] h-[40px] rounded-full mr-3"
-                  alt=""
+                  alt={userData?.name}
                 />
               )}
               {item.images && (
                 <img
                   src={`${item.images?.url}`}
                   className="w-[300px] h-[300px] object-cover rounded-[10px] ml-2 mb-2"
+                  alt=""
                 />
               )}
               {item.text !== "" && (
@@ -393,7 +388,7 @@ const SellerInbox = ({
                   </div>
 
                   <p className="text-[12px] text-[#000000d3] pt-1">
-                    {format(item.createdAt)}
+                    {/* {format(item.createdAt)} */}
                   </p>
                 </div>
               )}
@@ -403,7 +398,6 @@ const SellerInbox = ({
 
       {/* send message input */}
       <form
-        aria-required={true}
         className="p-3 relative w-full flex justify-between items-center"
         onSubmit={sendMessageHandler}
       >
